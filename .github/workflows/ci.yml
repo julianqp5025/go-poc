@@ -10,10 +10,10 @@ name: Build & Deploy Go server app
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -51,10 +51,10 @@ jobs:
       - name: Grant execution permissions
         run: go version
 
-      - name: Build Docker Image
-        uses: mr-smithers-excellent/docker-build-push@v4
-        with:
-          image: docker-hub-repo/image-name
-          registry: docker.io
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      # - name: Build Docker Image
+      #   uses: mr-smithers-excellent/docker-build-push@v4
+      #   with:
+      #     image: docker-hub-repo/image-name
+      #     registry: docker.io
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
