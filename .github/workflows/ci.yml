@@ -1,0 +1,60 @@
+# Steps:
+# 1. clone repo
+# 2. build docker image
+# 3. publish docker image
+# 4. apply docker image
+# 5. test app
+
+name: Build & Deploy Go server app
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: golang:1.21-alpine3.18
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out code
+
+      - name: run tests
+        uses: actions/setup-go@v1
+        with:
+          go: 1.21
+
+      - name: Build Go app
+        run: go build -o wiki ./wiki.go
+
+      - name: Execute Go app
+        run: ./wiki
+
+  publish:
+    needs: build
+    runs-on: docker:24.0.7
+    # strategy:
+    #   matrix:
+    #     os:
+    #       - ubuntu-latest
+    #       - windows
+    #       - macOS-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out code
+
+      - name: Grant execution permissions
+        run: go version
+
+      - name: Build Docker Image
+        uses: mr-smithers-excellent/docker-build-push@v4
+        with:
+          image: docker-hub-repo/image-name
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}

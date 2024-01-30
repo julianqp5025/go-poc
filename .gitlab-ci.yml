@@ -1,0 +1,45 @@
+# Steps:
+# 1. clone repo
+# 2. build docker image
+# 3. publish docker image
+# 4. apply docker image
+# 5. test app
+variables:
+  IMAGE_NAME: <docker-image-name>/go-web-server-poc
+  IMAGE_TAG: $CI_JOB_ID
+
+stages:
+  - test
+  - build
+  - deploy
+
+run_tests:
+  stage: test
+  image: golang:1.21-alpine3.18
+  before_script:
+    - go version
+  script:
+    - go build -o wiki ./wiki
+
+build_docker_image:
+  stage: build
+  image: docker:24.0.7
+  services:
+    - docker:24.0.7-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+deploy_docker_image:
+  stage: deploy
+  before_script:
+    - chmod 600 $SSH_KEY
+  script:
+    - ssh -o StrictHostKeyChecking=no -i $SSH_KEY root:<ip-server> "
+      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD &&
+      docker ps -aq | xargs docker stop | xargs docker rm &&
+      docker run -d -p 8080:8080 -t $IMAGE_NAME:$IMAGE_TAG"
